@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DukanDost - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#90d792",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-bright": "#f9f9f9",
+                    "on-tertiary-container": "#c7ffc5",
+                    "primary": "#0d631b",
+                    "on-secondary-fixed-variant": "#0c5216",
+                    "surface-container-high": "#e8e8e8",
+                    "secondary-container": "#acf4a4",
+                    "tertiary-container": "#387b41",
+                    "secondary-fixed": "#acf4a4",
+                    "surface-container-highest": "#e2e2e2",
+                    "on-error-container": "#93000a",
+                    "on-background": "#1a1c1c",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#07521d",
+                    "inverse-on-surface": "#f1f1f1",
+                    "surface-variant": "#e2e2e2",
+                    "primary-fixed": "#a3f69c",
+                    "error": "#ba1a1a",
+                    "surface": "#f9f9f9",
+                    "inverse-primary": "#88d982",
+                    "background": "#f9f9f9",
+                    "surface-container-low": "#f3f3f3",
+                    "primary-container": "#2e7d32",
+                    "tertiary-fixed": "#abf4ac",
+                    "outline": "#707a6c",
+                    "on-secondary-container": "#307231",
+                    "on-surface": "#1a1c1c",
+                    "on-secondary-fixed": "#002203",
+                    "surface-dim": "#dadada",
+                    "on-primary-container": "#cbffc2",
+                    "surface-container": "#eeeeee",
+                    "secondary-fixed-dim": "#91d78a",
+                    "on-error": "#ffffff",
+                    "on-primary-fixed-variant": "#005312",
+                    "primary-fixed-dim": "#88d982",
+                    "on-primary-fixed": "#002204",
+                    "outline-variant": "#bfcaba",
+                    "on-tertiary-fixed": "#002107",
+                    "on-surface-variant": "#40493d",
+                    "on-primary": "#ffffff",
+                    "inverse-surface": "#2f3131",
+                    "secondary": "#2a6b2c",
+                    "on-tertiary": "#ffffff",
+                    "surface-tint": "#1b6d24",
+                    "tertiary": "#1d622b",
+                    "error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "xl": "32px",
+                    "lg": "24px",
+                    "gutter": "12px",
+                    "md": "16px",
+                    "button-height": "56px",
+                    "sm": "8px",
+                    "touch-target-min": "48px",
+                    "margin-edge": "16px",
+                    "xs": "4px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-lg": ["Inter"],
+                    "urdu-body": ["Noto Naskh Arabic"],
+                    "headline-lg": ["Inter"],
+                    "headline-md": ["Inter"]
+            },
+            "fontSize": {
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600"}],
+                    "urdu-body": ["20px", {"lineHeight": "32px", "fontWeight": "400"}],
+                    "headline-lg": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "headline-md": ["22px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #F5F5F5;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="font-body-md text-on-surface selection:bg-secondary-container">
+<!-- TopAppBar -->
+<header class="bg-white dark:bg-stone-950 border-b border-stone-200 dark:border-stone-800 shadow-sm dark:shadow-none sticky top-0 z-40">
+<div class="flex justify-between items-center w-full px-4 h-16 max-w-screen-xl mx-auto">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-green-800 dark:text-green-500" data-icon="storefront">storefront</span>
+<h1 class="font-['Inter'] font-semibold text-lg tracking-tight text-xl font-black text-green-800 dark:text-green-400">DukanDost</h1>
+</div>
+<button class="font-['Inter'] font-semibold text-lg tracking-tight text-green-800 dark:text-green-500 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors active:scale-95 duration-150 px-3 py-1 rounded-lg">
+                EN/اردو
+            </button>
+</div>
+</header>
+<main class="max-w-screen-xl mx-auto px-4 pt-6 pb-24">
+<!-- Welcome Hero Section -->
+<section class="mb-8">
+<div class="relative overflow-hidden rounded-2xl bg-primary px-6 py-10 shadow-lg flex flex-col md:flex-row items-center justify-between">
+<div class="relative z-10">
+<h2 class="text-on-primary font-headline-lg mb-2">Assalam-o-Alaikum, Shopkeeper!</h2>
+<p class="text-on-primary-container font-body-md opacity-90">Manage your shop efficiently with DukanDost.</p>
+</div>
+<div class="mt-6 md:mt-0 relative z-10 flex gap-4">
+<div class="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20">
+<p class="text-white/70 text-xs font-label-lg uppercase tracking-wider">Date</p>
+<p class="text-white font-headline-md">Oct 24, 2023</p>
+</div>
+</div>
+<!-- Abstract Background Pattern -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+</div>
+</section>
+<!-- Quick Action Buttons -->
+<section class="grid gap-4 mb-8 grid-cols-4">
+<button class="flex flex-col items-center justify-center bg-primary text-white h-24 rounded-2xl shadow-md active:scale-95 transition-transform">
+<span class="material-symbols-outlined mb-2" data-icon="add_shopping_cart">add_shopping_cart</span>
+<span class="font-label-lg">Sell (بیچیں)</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-secondary text-white h-24 rounded-2xl shadow-md active:scale-95 transition-transform">
+<span class="material-symbols-outlined mb-2" data-icon="shopping_bag">shopping_bag</span>
+<span class="font-label-lg">Buy (خریدیں)</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-tertiary-container text-on-tertiary h-24 rounded-2xl shadow-md active:scale-95 transition-transform">
+<span class="material-symbols-outlined mb-2" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-lg">Udhaar (ادھار)</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-surface-container-highest text-on-surface h-24 rounded-2xl shadow-md active:scale-95 transition-transform border border-outline-variant">
+<span class="material-symbols-outlined mb-2" data-icon="edit_document">edit_document</span>
+<span class="font-label-lg leading-tight text-center">Manual (مینول)</span>
+</button></section>
+<!-- Bento Grid Insights -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-4">
+<!-- Today's Sales -->
+<div class="md:col-span-8 bg-white rounded-2xl p-6 shadow-[0_2px_10px_rgba(0,0,0,0.04)] flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="bg-secondary-container p-3 rounded-xl">
+<span class="material-symbols-outlined text-secondary" data-icon="payments">payments</span>
+</div>
+<span class="text-secondary font-urdu-body text-xl">آج کی فروخت</span>
+</div>
+<h3 class="text-stone-500 font-label-lg uppercase tracking-tight">Today's Sales</h3>
+<p class="text-4xl font-black text-on-surface mt-2">Rs. 42,500</p>
+</div>
+<div class="mt-6 h-24 w-full bg-stone-50 rounded-lg flex items-end gap-1 px-2 py-2">
+<div class="w-full bg-secondary/20 h-1/2 rounded-t-sm"></div>
+<div class="w-full bg-secondary/20 h-2/3 rounded-t-sm"></div>
+<div class="w-full bg-secondary/20 h-3/4 rounded-t-sm"></div>
+<div class="w-full bg-secondary h-full rounded-t-sm"></div>
+<div class="w-full bg-secondary/20 h-1/3 rounded-t-sm"></div>
+<div class="w-full bg-secondary/20 h-1/2 rounded-t-sm"></div>
+<div class="w-full bg-secondary/20 h-2/3 rounded-t-sm"></div>
+</div>
+</div>
+<!-- Total Udhaar -->
+<div class="md:col-span-4 bg-white rounded-2xl p-6 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
+<div class="flex justify-between items-start mb-6">
+<div class="bg-error-container p-3 rounded-xl">
+<span class="material-symbols-outlined text-error" data-icon="history_edu">history_edu</span>
+</div>
+<span class="text-error font-urdu-body text-xl">کل ادھار</span>
+</div>
+<h3 class="text-stone-500 font-label-lg uppercase tracking-tight">Total Udhaar</h3>
+<p class="text-3xl font-bold text-error mt-1">Rs. 18,240</p>
+<div class="mt-4 pt-4 border-t border-stone-100">
+<p class="text-sm text-stone-500 font-body-md flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="group">group</span>
+                        12 Pending Customers
+                    </p>
+</div>
+</div>
+<!-- Low Stock Alert -->
+<div class="md:col-span-12 bg-white rounded-2xl p-6 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border-l-4 border-error">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-error" data-icon="warning">warning</span>
+<div>
+<h3 class="font-headline-md text-on-surface">Low Stock Alert</h3>
+<p class="font-urdu-body text-stone-600 text-lg">کم اسٹاک والے آئٹمز</p>
+</div>
+</div>
+<button class="text-primary font-label-lg hover:underline">View All</button>
+</div>
+<div class="space-y-4 mt-6">
+<div class="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-stone-200 rounded-lg flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up high quality studio product photograph of a premium flour bag packaging on a clean white surface with soft directional lighting. Professional commercial photography style with deep green branding accents to match the shopkeeper app interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuANQe6tD50PzpH_DIfptOwqrpyCbtsDMQyzxXsczrPzpm6HN1wsIeYuKcKE1-6tTwcRE8hBb9t32QqiNTHbgguxYbTawoM_Rh0I2PacASRMbISAbWY8NgQcX_Bj4r-ZZixBTrtA-uU11wbrKdRoo43u7hX3w0swU5SoyKu_aslUQE7VHpFy2O8X2NJGN4uKxVwd6Z6psiyMz7bLKCBiGV-QceMy_fD8qA7G3uZVd2LyUInnV3eDvoa_kjU1KJ76LqV4zzv_KXRKDfc"/>
+</div>
+<div>
+<p class="font-label-lg">Chakki Atta 10kg</p>
+<p class="text-xs text-stone-500">Only 3 units left</p>
+</div>
+</div>
+<span class="bg-error/10 text-error px-3 py-1 rounded-full text-xs font-bold">REORDER</span>
+</div>
+<div class="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-stone-200 rounded-lg flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="High angle macro shot of cooking oil bottles arranged neatly in a row. The lighting is bright and airy with golden yellow tones from the oil reflecting the light. Clean, high-end product presentation suitable for a modern inventory management dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7tqLTHf0btGQrJjNMKeLix6nVdyYPmIOAVFsuhbc_i3F6tFVHcmzNiv6lMOV0MqKZD2lOEa04sCiGEVNLEWzbsf3X6_3iWpx-EKeQVXq1gRPCPYBz80W8VLgspCYyoewq7CWedIcBYYZawyqZLRO2JYoYntjC6in05bkopWF7VOvU07M1OH-awOmp2pFWXvAB_KapnzWfNhwV_-xFEpT24YSNg6Aw_qXChIDcx_yNbsIRRpfFtElPeyJ7lNTo65rB-MfkMNxr7pw"/>
+</div>
+<div>
+<p class="font-label-lg">Cooking Oil 5L</p>
+<p class="text-xs text-stone-500">Only 2 units left</p>
+</div>
+</div>
+<span class="bg-error/10 text-error px-3 py-1 rounded-full text-xs font-bold">REORDER</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-stone-950 flex justify-around items-center px-2 py-3 h-20 z-50 rounded-t-2xl border-t border-stone-200 dark:border-stone-800 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+<!-- Dashboard (Active) -->
+<a class="flex flex-col items-center justify-center bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-xl px-3 py-1.5 active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-['Inter'] text-[12px] font-medium">Dashboard</span>
+</a>
+<!-- Udhaar -->
+<a class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 px-3 py-1.5 hover:bg-stone-50 dark:hover:bg-stone-900 active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-['Inter'] text-[12px] font-medium">Udhaar</span>
+</a>
+<!-- Voice -->
+<div class="relative -top-6">
+<button class="bg-green-800 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-3xl" data-icon="mic" style="font-variation-settings: 'FILL' 1;">mic</span>
+</button>
+<p class="text-[12px] font-medium text-center mt-1 text-stone-500">Voice</p>
+</div>
+<!-- Stock -->
+<a class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 px-3 py-1.5 hover:bg-stone-50 dark:hover:bg-stone-900 active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-['Inter'] text-[12px] font-medium">Stock</span>
+</a>
+<!-- Reports -->
+<a class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 px-3 py-1.5 hover:bg-stone-50 dark:hover:bg-stone-900 active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+<span class="font-['Inter'] text-[12px] font-medium">Reports</span>
+</a>
+</nav>
+</body></html>
