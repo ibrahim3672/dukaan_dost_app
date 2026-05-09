@@ -81,18 +81,18 @@ class DashboardScreen extends StatelessWidget {
               onTap: () => Navigator.pushNamed(context, '/manual'),
             ),
             QuickAction(
-              'Buy',
-              'خریدیں',
+              'Add Product',
+              'پروڈکٹ شامل کریں۔',
               Icons.shopping_bag_rounded,
               C.secondary,
               onTap: () => Navigator.pushNamed(context, '/add-product'),
             ),
-            const QuickAction(
-              'Udhaar',
-              'ادھار',
-              Icons.account_balance_wallet_rounded,
-              C.tertiaryContainer,
-            ),
+            // const QuickAction(
+            //   'Udhaar',
+            //   'ادھار',
+            //   Icons.account_balance_wallet_rounded,
+            //   C.tertiaryContainer,
+            // ),
             QuickAction(
               'Manual',
               'مینول',
