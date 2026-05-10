@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../app/app_theme.dart';
+import '../providers/products_provider.dart';
+import '../providers/sales_provider.dart';
+import '../providers/udhaar_provider.dart';
 import '../widgets/common_widgets.dart';
 import 'dashboard_screen.dart';
 import 'reports_screen.dart';
@@ -24,6 +28,18 @@ class _MainShellState extends State<MainShell> {
     StockManagerScreen(),
     ReportsScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProductsProvider>()
+        ..loadProducts()
+        ..loadCustomers();
+      context.read<SalesProvider>().loadSales();
+      context.read<UdhaarProvider>().loadUdhaar();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

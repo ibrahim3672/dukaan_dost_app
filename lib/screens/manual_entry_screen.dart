@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../app/app_theme.dart';
+import '../models/product_model.dart';
+import '../models/sale_item_model.dart';
+import '../models/sale_model.dart';
+import '../providers/products_provider.dart';
+import '../providers/sales_provider.dart';
+import '../providers/udhaar_provider.dart';
 import '../widgets/common_widgets.dart';
 
 class ManualEntryScreen extends StatefulWidget {
@@ -13,42 +20,16 @@ class ManualEntryScreen extends StatefulWidget {
 class _ManualEntryScreenState extends State<ManualEntryScreen> {
   bool sale = true;
   bool cash = true;
+  int? selectedCustomerId;
+  final partialPaidController = TextEditingController();
+  final saleQuantities = <int, int>{};
+  final purchaseQuantities = <int, int>{};
 
-  final products = const [
-    _EntryProduct(
-      'Chakki Atta',
-      'kg',
-      'Rs. 100 / kg',
-      100,
-      Icons.grain_rounded,
-    ),
-    _EntryProduct(
-      'Cooking Oil',
-      'ltr',
-      'Rs. 370 / ltr',
-      370,
-      Icons.water_drop_rounded,
-    ),
-    _EntryProduct(
-      'Milk Pack',
-      'pcs',
-      'Rs. 120 / pcs',
-      120,
-      Icons.local_drink_rounded,
-    ),
-    _EntryProduct(
-      'Basmati Rice',
-      'kg',
-      'Rs. 250 / kg',
-      250,
-      Icons.rice_bowl_rounded,
-    ),
-  ];
-
-  late final List<int> saleQuantities = List<int>.filled(products.length, 0)
-    ..[0] = 1;
-  late final List<int> purchaseQuantities = List<int>.filled(products.length, 0)
-    ..[0] = 1;
+  @override
+  void dispose() {
+    partialPaidController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,43 +42,80 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
         title: const Text('Manual Entry'),
         actions: [TextButton(onPressed: () {}, child: const Text('اردو'))],
       ),
-      body: AppScroll(
-        bottomPadding: 24,
-        children: [
-          Segment(
-            left: 'Sale\nفروخت',
-            right: 'Purchase\nخریداری',
-            leftActive: sale,
-            onChanged: (v) => setState(() {
-              sale = v;
-              if (!sale) cash = true;
-            }),
-          ),
-          const SizedBox(height: 18),
-          if (sale) ..._saleFields() else ..._purchaseFields(),
-          const SizedBox(height: 24),
-          PrimaryButton(
-            label: sale ? 'Save Sale' : 'Save Purchase',
-            icon: Icons.save_rounded,
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
+      body: Consumer2<ProductsProvider, SalesProvider>(
+        builder: (context, productsProvider, salesProvider, _) {
+          final products = productsProvider.products;
+          return AppScroll(
+            bottomPadding: 24,
+            children: [
+              Segment(
+                left: 'Sale\nفروخت',
+                right: 'Purchase\nخریداری',
+                leftActive: sale,
+                onChanged: (v) => setState(() {
+                  sale = v;
+                  if (!sale) cash = true;
+                }),
+              ),
+              const SizedBox(height: 18),
+              if (productsProvider.isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (productsProvider.error != null)
+                ApiStateMessage(message: productsProvider.error!, isError: true)
+              else if (products.isEmpty)
+                const ApiStateMessage(
+                  message: 'No products found. Add products first.',
+                )
+              else if (sale)
+                ..._saleFields(productsProvider, salesProvider)
+              else
+                ..._purchaseFields(productsProvider),
+              const SizedBox(height: 24),
+              PrimaryButton(
+                label: sale
+                    ? (salesProvider.isLoading ? 'Saving Sale...' : 'Save Sale')
+                    : (productsProvider.isLoading
+                          ? 'Saving Purchase...'
+                          : 'Save Purchase'),
+                icon: Icons.save_rounded,
+                onPressed: () => sale
+                    ? _saveSale(context, productsProvider)
+                    : _savePurchase(context, productsProvider),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  List<Widget> _saleFields() {
+  List<Widget> _saleFields(
+    ProductsProvider productsProvider,
+    SalesProvider salesProvider,
+  ) {
+    final products = productsProvider.products;
+    final customers = productsProvider.customers;
+    final total = _totalAmountFor(products, saleQuantities);
     return [
-      const LabeledField(
-        label: 'Customer',
-        urdu: 'گاہک',
-        hint: 'Search or add name...',
+      DropdownButtonFormField<int>(
+        initialValue: selectedCustomerId,
+        decoration: const InputDecoration(labelText: 'Customer / گاہک'),
+        items: customers
+            .map(
+              (customer) => DropdownMenuItem(
+                value: customer.id,
+                child: Text(customer.name),
+              ),
+            )
+            .toList(),
+        onChanged: (value) => setState(() => selectedCustomerId = value),
       ),
       const SizedBox(height: 14),
       ..._productSelector(
         label: 'Search / Select Sale Products',
         urdu: 'فروخت کے آئٹمز منتخب کریں',
         hint: 'Search existing stock items...',
+        products: products,
         quantities: saleQuantities,
       ),
       const SizedBox(height: 14),
@@ -107,11 +125,15 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
         emptyText: 'Select one or more sale products above',
         products: products,
         quantities: saleQuantities,
-        onDecrease: _decreaseSaleQuantity,
-        onIncrease: _increaseSaleQuantity,
+        onDecrease: (id) => _decreaseQuantity(saleQuantities, id),
+        onIncrease: (id) => _increaseQuantity(saleQuantities, id),
       ),
       const SizedBox(height: 14),
-      _SaleTotalCard(totalAmount: _totalAmountFor(saleQuantities)),
+      _SaleTotalCard(totalAmount: total),
+      if (salesProvider.error != null) ...[
+        const SizedBox(height: 12),
+        ApiStateMessage(message: salesProvider.error!, isError: true),
+      ],
       const SizedBox(height: 14),
       Segment(
         left: 'Cash\nنقد',
@@ -121,12 +143,13 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       ),
       if (!cash) ...[
         const SizedBox(height: 14),
-        const LabeledField(
+        LabeledField(
           label: 'Partial Cash Paid',
           urdu: 'جزوی نقد ادائیگی',
           hint: '0',
           prefix: 'Rs.',
           keyboard: TextInputType.number,
+          controller: partialPaidController,
         ),
         const SizedBox(height: 10),
         AppCard(
@@ -152,12 +175,14 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     ];
   }
 
-  List<Widget> _purchaseFields() {
+  List<Widget> _purchaseFields(ProductsProvider productsProvider) {
+    final products = productsProvider.products;
     return [
       ..._productSelector(
         label: 'Search / Select Purchase Products',
         urdu: 'خریداری کے آئٹمز منتخب کریں',
         hint: 'Search existing stock items...',
+        products: products,
         quantities: purchaseQuantities,
       ),
       const SizedBox(height: 14),
@@ -167,9 +192,13 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
         emptyText: 'Select one or more purchase products above',
         products: products,
         quantities: purchaseQuantities,
-        onDecrease: _decreasePurchaseQuantity,
-        onIncrease: _increasePurchaseQuantity,
+        onDecrease: (id) => _decreaseQuantity(purchaseQuantities, id),
+        onIncrease: (id) => _increaseQuantity(purchaseQuantities, id),
       ),
+      if (productsProvider.error != null) ...[
+        const SizedBox(height: 12),
+        ApiStateMessage(message: productsProvider.error!, isError: true),
+      ],
     ];
   }
 
@@ -177,7 +206,8 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     required String label,
     required String urdu,
     required String hint,
-    required List<int> quantities,
+    required List<ProductModel> products,
+    required Map<int, int> quantities,
   }) {
     return [
       LabeledField(label: label, urdu: urdu, hint: hint),
@@ -190,12 +220,11 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
           separatorBuilder: (_, _) => const SizedBox(width: 10),
           itemBuilder: (context, index) {
             final item = products[index];
-            final selected = quantities[index] > 0;
+            final selected = (quantities[item.id] ?? 0) > 0;
             return InkWell(
               borderRadius: BorderRadius.circular(18),
-              onTap: () => setState(() {
-                quantities[index] = selected ? 0 : 1;
-              }),
+              onTap: () =>
+                  setState(() => quantities[item.id] = selected ? 0 : 1),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 width: 178,
@@ -210,7 +239,10 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(item.icon, color: selected ? Colors.white : C.primary),
+                    Icon(
+                      Icons.inventory_2_rounded,
+                      color: selected ? Colors.white : C.primary,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -228,7 +260,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${item.unit} • ${item.price}',
+                            '${item.unit} • Rs. ${item.salePrice.toStringAsFixed(0)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -259,63 +291,114 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     ];
   }
 
-  void _decreaseSaleQuantity(int index) {
-    setState(() {
-      if (saleQuantities[index] > 1) {
-        saleQuantities[index]--;
-      } else {
-        saleQuantities[index] = 0;
-      }
-    });
-  }
-
-  void _increaseSaleQuantity(int index) {
-    setState(() => saleQuantities[index]++);
-  }
-
-  void _decreasePurchaseQuantity(int index) {
-    setState(() {
-      if (purchaseQuantities[index] > 1) {
-        purchaseQuantities[index]--;
-      } else {
-        purchaseQuantities[index] = 0;
-      }
-    });
-  }
-
-  void _increasePurchaseQuantity(int index) {
-    setState(() => purchaseQuantities[index]++);
-  }
-
-  int _totalAmountFor(List<int> quantities) {
-    var total = 0;
-    for (var i = 0; i < products.length; i++) {
-      total += products[i].priceValue * quantities[i];
+  Future<void> _saveSale(
+    BuildContext context,
+    ProductsProvider productsProvider,
+  ) async {
+    final selected = _selectedProducts(
+      productsProvider.products,
+      saleQuantities,
+    );
+    if (selected.isEmpty) return;
+    final total = _totalAmountFor(productsProvider.products, saleQuantities);
+    final paid = cash
+        ? total
+        : double.tryParse(partialPaidController.text) ?? 0;
+    final sale = SaleModel(
+      id: 0,
+      customerId: selectedCustomerId,
+      totalAmount: total,
+      paidAmount: paid,
+      dueAmount: total - paid,
+      paymentType: cash ? 'cash' : 'udhaar',
+      date: DateTime.now(),
+      items: selected
+          .map(
+            (product) => SaleItemModel(
+              id: 0,
+              productId: product.id,
+              productName: product.name,
+              unit: product.unit,
+              quantity: (saleQuantities[product.id] ?? 0).toDouble(),
+              price: product.salePrice,
+              total: product.salePrice * (saleQuantities[product.id] ?? 0),
+            ),
+          )
+          .toList(),
+    );
+    final salesProvider = context.read<SalesProvider>();
+    final udhaarProvider = context.read<UdhaarProvider>();
+    final refreshedProductsProvider = context.read<ProductsProvider>();
+    final created = await salesProvider.createSale(sale);
+    if (created != null && context.mounted) {
+      await udhaarProvider.loadUdhaar();
+      await refreshedProductsProvider.loadProducts();
+      await refreshedProductsProvider.loadCustomers();
+      if (context.mounted) Navigator.pop(context);
     }
-    return total;
   }
-}
 
-class _EntryProduct {
-  const _EntryProduct(
-    this.name,
-    this.unit,
-    this.price,
-    this.priceValue,
-    this.icon,
-  );
+  Future<void> _savePurchase(
+    BuildContext context,
+    ProductsProvider productsProvider,
+  ) async {
+    final selected = _selectedProducts(
+      productsProvider.products,
+      purchaseQuantities,
+    );
+    for (final product in selected) {
+      final quantity = purchaseQuantities[product.id] ?? 0;
+      await productsProvider.updateProduct(
+        ProductModel(
+          id: product.id,
+          name: product.name,
+          unit: product.unit,
+          category: product.category,
+          stock: product.stock + quantity,
+          salePrice: product.salePrice,
+          purchasePrice: product.purchasePrice,
+          imageUrl: product.imageUrl,
+        ),
+      );
+    }
+    if (selected.isNotEmpty && context.mounted) Navigator.pop(context);
+  }
 
-  final String name;
-  final String unit;
-  final String price;
-  final int priceValue;
-  final IconData icon;
+  List<ProductModel> _selectedProducts(
+    List<ProductModel> products,
+    Map<int, int> quantities,
+  ) {
+    return products
+        .where((product) => (quantities[product.id] ?? 0) > 0)
+        .toList();
+  }
+
+  double _totalAmountFor(
+    List<ProductModel> products,
+    Map<int, int> quantities,
+  ) {
+    return products.fold(
+      0,
+      (sum, product) => sum + product.salePrice * (quantities[product.id] ?? 0),
+    );
+  }
+
+  void _decreaseQuantity(Map<int, int> quantities, int id) {
+    setState(() {
+      final current = quantities[id] ?? 0;
+      quantities[id] = current > 1 ? current - 1 : 0;
+    });
+  }
+
+  void _increaseQuantity(Map<int, int> quantities, int id) {
+    setState(() => quantities[id] = (quantities[id] ?? 0) + 1);
+  }
 }
 
 class _SaleTotalCard extends StatelessWidget {
   const _SaleTotalCard({required this.totalAmount});
 
-  final int totalAmount;
+  final double totalAmount;
 
   @override
   Widget build(BuildContext context) {
@@ -357,7 +440,7 @@ class _SaleTotalCard extends StatelessWidget {
             ),
           ),
           Text(
-            'Rs. $totalAmount',
+            'Rs. ${totalAmount.toStringAsFixed(0)}',
             style: const TextStyle(
               color: C.primary,
               fontSize: 24,
@@ -384,18 +467,16 @@ class _SelectedProductsCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String emptyText;
-  final List<_EntryProduct> products;
-  final List<int> quantities;
+  final List<ProductModel> products;
+  final Map<int, int> quantities;
   final ValueChanged<int> onDecrease;
   final ValueChanged<int> onIncrease;
 
   @override
   Widget build(BuildContext context) {
-    final selectedIndexes = <int>[
-      for (var i = 0; i < products.length; i++)
-        if (quantities[i] > 0) i,
-    ];
-
+    final selected = products
+        .where((product) => (quantities[product.id] ?? 0) > 0)
+        .toList();
     return AppCard(
       color: const Color(0x1AACF4A4),
       child: Column(
@@ -414,24 +495,22 @@ class _SelectedProductsCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          if (selectedIndexes.isEmpty)
+          if (selected.isEmpty)
             _EmptyProductSelection(text: emptyText)
           else
-            ...selectedIndexes.map((index) {
-              final item = products[index];
-              final quantity = quantities[index];
-              return Padding(
+            ...selected.map(
+              (product) => Padding(
                 padding: EdgeInsets.only(
-                  bottom: index == selectedIndexes.last ? 0 : 12,
+                  bottom: product.id == selected.last.id ? 0 : 12,
                 ),
                 child: _EntryProductRow(
-                  product: item,
-                  quantity: quantity,
-                  onDecrease: () => onDecrease(index),
-                  onIncrease: () => onIncrease(index),
+                  product: product,
+                  quantity: quantities[product.id] ?? 0,
+                  onDecrease: () => onDecrease(product.id),
+                  onIncrease: () => onIncrease(product.id),
                 ),
-              );
-            }),
+              ),
+            ),
         ],
       ),
     );
@@ -446,7 +525,7 @@ class _EntryProductRow extends StatelessWidget {
     required this.onIncrease,
   });
 
-  final _EntryProduct product;
+  final ProductModel product;
   final int quantity;
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
@@ -475,7 +554,7 @@ class _EntryProductRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Unit: ${product.unit} • Price: ${product.price}',
+                  'Unit: ${product.unit} • Price: Rs. ${product.salePrice.toStringAsFixed(0)}',
                   style: const TextStyle(
                     color: C.muted,
                     fontWeight: FontWeight.w700,

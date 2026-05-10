@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../app/app_theme.dart';
+import '../models/customer_model.dart';
+import '../providers/products_provider.dart';
 
 class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
   const BrandAppBar({super.key, this.onSettings, this.showSettings = true});
@@ -196,6 +199,32 @@ class AppCard extends StatelessWidget {
   }
 }
 
+class ApiStateMessage extends StatelessWidget {
+  const ApiStateMessage({
+    super.key,
+    required this.message,
+    this.isError = false,
+  });
+
+  final String message;
+  final bool isError;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      color: isError ? C.errorContainer : Colors.white,
+      child: Text(
+        message,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: isError ? C.error : C.outline,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     super.key,
@@ -235,6 +264,7 @@ class LabeledField extends StatelessWidget {
     this.suffix,
     this.keyboard,
     this.obscure = false,
+    this.controller,
   });
   final String label;
   final String urdu;
@@ -243,6 +273,7 @@ class LabeledField extends StatelessWidget {
   final String? suffix;
   final TextInputType? keyboard;
   final bool obscure;
+  final TextEditingController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -273,6 +304,7 @@ class LabeledField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         TextField(
+          controller: controller,
           obscureText: obscure,
           keyboardType: keyboard,
           decoration: InputDecoration(
@@ -546,10 +578,12 @@ class StockTile extends StatelessWidget {
     required this.name,
     required this.units,
     this.danger = false,
+    this.onReorder,
   });
   final String name;
   final String units;
   final bool danger;
+  final VoidCallback? onReorder;
 
   @override
   Widget build(BuildContext context) {
@@ -586,20 +620,38 @@ class StockTile extends StatelessWidget {
               ],
             ),
           ),
-          Chip(
-            label: Text(
-              danger ? 'REORDER' : 'OK',
-              style: TextStyle(
-                color: danger ? C.error : C.secondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
+          if (danger && onReorder != null)
+            FilledButton(
+              onPressed: onReorder,
+              style: FilledButton.styleFrom(
+                backgroundColor: C.error,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                minimumSize: const Size(0, 36),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999),
+                ),
               ),
+              child: const Text(
+                'Reorder',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+              ),
+            )
+          else
+            Chip(
+              label: Text(
+                danger ? 'REORDER' : 'OK',
+                style: TextStyle(
+                  color: danger ? C.error : C.secondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              backgroundColor: danger
+                  ? const Color(0x14BA1A1A)
+                  : const Color(0x1A2A6B2C),
+              side: BorderSide.none,
             ),
-            backgroundColor: danger
-                ? const Color(0x14BA1A1A)
-                : const Color(0x1A2A6B2C),
-            side: BorderSide.none,
-          ),
         ],
       ),
     );
@@ -716,10 +768,14 @@ class UdhaarCustomer extends StatelessWidget {
     required this.name,
     required this.amount,
     required this.note,
+    this.onReminder,
+    this.onPay,
   });
   final String name;
   final String amount;
   final String note;
+  final VoidCallback? onReminder;
+  final VoidCallback? onPay;
 
   @override
   Widget build(BuildContext context) {
@@ -765,18 +821,40 @@ class UdhaarCustomer extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          FilledButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.send_rounded),
-            label: const Text('Send WhatsApp Reminder'),
-            style: FilledButton.styleFrom(
-              backgroundColor: C.whatsapp,
-              foregroundColor: Colors.white,
-              minimumSize: const Size.fromHeight(50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onReminder,
+                  icon: const Icon(Icons.send_rounded),
+                  label: const Text('WhatsApp'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: C.whatsapp,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onPay,
+                  icon: const Icon(Icons.payments_rounded),
+                  label: const Text('Pay'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: C.primary,
+                    minimumSize: const Size.fromHeight(50),
+                    side: const BorderSide(color: C.primaryContainer),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -792,6 +870,8 @@ class CustomerTile extends StatelessWidget {
     required this.balance,
     required this.status,
     this.hasDebt = false,
+    this.onTap,
+    this.onPay,
   });
 
   final String name;
@@ -799,66 +879,89 @@ class CustomerTile extends StatelessWidget {
   final String balance;
   final String status;
   final bool hasDebt;
+  final VoidCallback? onTap;
+  final VoidCallback? onPay;
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
+    return InkWell(
+      borderRadius: BorderRadius.circular(22),
+      onTap: onTap,
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: hasDebt ? C.errorContainer : C.secondaryContainer,
-            child: Text(
-              name[0],
-              style: TextStyle(
-                color: hasDebt ? C.error : C.secondary,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
+            child: AppCard(
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: hasDebt
+                        ? C.errorContainer
+                        : C.secondaryContainer,
+                    child: Text(
+                      name[0],
+                      style: TextStyle(
+                        color: hasDebt ? C.error : C.secondary,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  phone,
-                  style: const TextStyle(color: C.outline, fontSize: 13),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  status,
-                  style: TextStyle(
-                    color: hasDebt ? C.error : C.secondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          phone,
+                          style: const TextStyle(
+                            color: C.outline,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          status,
+                          style: TextStyle(
+                            color: hasDebt ? C.error : C.secondary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                balance,
-                style: TextStyle(
-                  color: hasDebt ? C.error : C.secondary,
-                  fontWeight: FontWeight.w900,
-                ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        balance,
+                        style: TextStyle(
+                          color: hasDebt ? C.error : C.secondary,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (hasDebt && onPay != null)
+                        TextButton(onPressed: onPay, child: const Text('Pay'))
+                      else
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          color: C.outline,
+                        ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              const Icon(Icons.chevron_right_rounded, color: C.outline),
-            ],
+            ),
           ),
         ],
       ),
@@ -866,8 +969,25 @@ class CustomerTile extends StatelessWidget {
   }
 }
 
-class AddCustomerSheet extends StatelessWidget {
+class AddCustomerSheet extends StatefulWidget {
   const AddCustomerSheet({super.key});
+
+  @override
+  State<AddCustomerSheet> createState() => _AddCustomerSheetState();
+}
+
+class _AddCustomerSheetState extends State<AddCustomerSheet> {
+  final nameController = TextEditingController();
+  final phoneController = TextEditingController();
+  final balanceController = TextEditingController();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    phoneController.dispose();
+    balanceController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -883,103 +1003,120 @@ class AddCustomerSheet extends StatelessWidget {
           top: false,
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 46,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: C.outlineLight,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Row(
+            child: Consumer<ProductsProvider>(
+              builder: (context, provider, _) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: C.secondaryContainer,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.person_add_alt_1_rounded,
-                        color: C.primary,
+                    Center(
+                      child: Container(
+                        width: 46,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: C.outlineLight,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Add New Customer',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                            ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: C.secondaryContainer,
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          Text(
-                            'گاہک کی تفصیلات شامل کریں',
-                            textDirection: TextDirection.rtl,
-                            style: TextStyle(
-                              color: C.primary,
-                              fontWeight: FontWeight.w800,
-                            ),
+                          child: const Icon(
+                            Icons.person_add_alt_1_rounded,
+                            color: C.primary,
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Add New Customer',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              Text(
+                                'گاہک کی تفصیلات شامل کریں',
+                                textDirection: TextDirection.rtl,
+                                style: TextStyle(
+                                  color: C.primary,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close_rounded),
+                    const SizedBox(height: 20),
+                    LabeledField(
+                      label: 'Customer Name',
+                      urdu: 'گاہک کا نام',
+                      hint: 'e.g. Ahmed Khan',
+                      controller: nameController,
+                    ),
+                    const SizedBox(height: 14),
+                    LabeledField(
+                      label: 'Phone Number',
+                      urdu: 'فون نمبر',
+                      hint: '+92 300 1234567',
+                      keyboard: TextInputType.phone,
+                      controller: phoneController,
+                    ),
+                    const SizedBox(height: 14),
+                    LabeledField(
+                      label: 'Opening Udhaar',
+                      urdu: 'ابتدائی ادھار',
+                      hint: '0',
+                      prefix: 'Rs.',
+                      keyboard: TextInputType.number,
+                      controller: balanceController,
+                    ),
+                    if (provider.error != null) ...[
+                      const SizedBox(height: 12),
+                      ApiStateMessage(message: provider.error!, isError: true),
+                    ],
+                    const SizedBox(height: 22),
+                    PrimaryButton(
+                      label: provider.isLoading ? 'Saving...' : 'Save Customer',
+                      icon: Icons.check_circle_rounded,
+                      onPressed: provider.isLoading ? () {} : _save,
                     ),
                   ],
-                ),
-                const SizedBox(height: 20),
-                const LabeledField(
-                  label: 'Customer Name',
-                  urdu: 'گاہک کا نام',
-                  hint: 'e.g. Ahmed Khan',
-                ),
-                const SizedBox(height: 14),
-                const LabeledField(
-                  label: 'Phone Number',
-                  urdu: 'فون نمبر',
-                  hint: '+92 300 1234567',
-                  keyboard: TextInputType.phone,
-                ),
-                const SizedBox(height: 14),
-                const LabeledField(
-                  label: 'Opening Udhaar',
-                  urdu: 'ابتدائی ادھار',
-                  hint: '0',
-                  prefix: 'Rs.',
-                  keyboard: TextInputType.number,
-                ),
-                const SizedBox(height: 14),
-                const LabeledField(
-                  label: 'Address / Note',
-                  urdu: 'پتہ یا نوٹ',
-                  hint: 'Optional',
-                ),
-                const SizedBox(height: 22),
-                PrimaryButton(
-                  label: 'Save Customer',
-                  icon: Icons.check_circle_rounded,
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
+                );
+              },
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _save() async {
+    final created = await context.read<ProductsProvider>().createCustomer(
+      CustomerModel(
+        id: 0,
+        name: nameController.text.trim(),
+        phone: phoneController.text.trim(),
+        balance: double.tryParse(balanceController.text) ?? 0,
+      ),
+    );
+    if (created != null && mounted) Navigator.pop(context);
   }
 }
 

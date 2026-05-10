@@ -52,7 +52,7 @@ class _SampleState extends State<Sample> {
             textField(controller: controller),
             ElevatedButton(
               onPressed: () {
-                print(controller.text);
+                debugPrint(controller.text);
               },
               child: Text("Print"),
             ),
